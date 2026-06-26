@@ -1,0 +1,10 @@
+# 完整环境：MySQL + Redis + RocketMQ Consumer
+# 启动: docker compose up -d
+# 运行: mvn spring-boot:run -Dspring-boot.run.profiles=mysql,full
+spring:
+  profiles:
+    include: mysql
+
+rocketmq:
+  consumer:
+    enabled: true

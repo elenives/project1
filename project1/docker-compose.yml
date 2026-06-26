@@ -1,0 +1,67 @@
+# 完整 Docker 环境：MySQL + Redis + RocketMQ + Spring Boot 应用
+# 启动: docker compose up -d --build
+# 日志: docker compose logs -f app
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: learning-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: learning_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  redis:
+    image: redis:7-alpine
+    container_name: learning-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.4
+    container_name: learning-rocketmq-namesrv
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.4
+    container_name: learning-rocketmq-broker
+    command: sh mqbroker -n rocketmq-namesrv:9876
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10911:10911"
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+
+  app:
+    build: .
+    container_name: learning-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,full
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rocketmq-broker:
+        condition: service_started
+    restart: on-failure
+
+volumes:
+  mysql_data:

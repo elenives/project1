@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: springboot-learning
+
+  # 默认使用 H2 内存库，无需 Docker 即可运行
+  # 切换 MySQL: spring.profiles.active=mysql
+  datasource:
+    url: jdbc:h2:mem:learning_db;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+
+# RocketMQ（需 docker compose 启动；consumer.enabled=true 时启用消费者）
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: learning-producer-group
+    send-message-timeout: 3000
+  consumer:
+    enabled: false
+
+logging:
+  level:
+    com.example.learning: DEBUG
